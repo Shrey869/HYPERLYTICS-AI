@@ -12,6 +12,25 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional, Any, Dict, List
 from agents.supervisor import supervisor_agent
+import supabase_sync
+
+# Restore database and uploaded files from Supabase Storage at startup
+supabase_sync.sync_from_cloud_on_startup()
+
+# Auto-sync database changes to Supabase in the background whenever committed
+class SyncedConnection(sqlite3.Connection):
+    def commit(self):
+        super().commit()
+        supabase_sync.sync_to_cloud(DB_PATH)
+
+original_connect = sqlite3.connect
+def patched_connect(*args, **kwargs):
+    if "factory" not in kwargs:
+        kwargs["factory"] = SyncedConnection
+    return original_connect(*args, **kwargs)
+sqlite3.connect = patched_connect
+
+
 
 def sanitize_json_values(obj: Any) -> Any:
     if isinstance(obj, float):
@@ -693,7 +712,9 @@ def generate_og_image(share_id: str, query: str, story: dict) -> str:
     os.makedirs(shares_dir, exist_ok=True)
     out_path = os.path.join(shares_dir, f"{share_id}.png")
     img.save(out_path)
+    supabase_sync.sync_to_cloud(out_path)
     return out_path
+
 
 init_db()
 
@@ -944,6 +965,11 @@ async def upload_dataset(file: UploadFile = File(...)):
             con.commit()
             con.close()
             
+        # Sync uploaded dataset files to Supabase Storage
+        supabase_sync.sync_to_cloud(file_path)
+        if next_ver > 1:
+            supabase_sync.sync_to_cloud(versioned_filepath)
+
         # Log compliance audit event
         log_audit_event(
             user_id="ANALYST_SSO",
