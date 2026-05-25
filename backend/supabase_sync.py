@@ -8,6 +8,9 @@ SUPABASE_URL = os.getenv("SUPABASE_URL", "")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY", "")
 BUCKET_NAME = os.getenv("SUPABASE_BUCKET", "hyperlytics")
 
+BACKEND_DIR = os.path.abspath(os.path.dirname(__file__))
+DATA_DIR = os.path.join(BACKEND_DIR, "data")
+
 def is_configured():
     return bool(SUPABASE_URL and SUPABASE_KEY)
 
@@ -54,7 +57,7 @@ def upload_file_sync(local_path):
     # Get relative path inside BUCKET
     # e.g., "data/hyperlytics.db" -> "hyperlytics.db"
     # e.g., "data/shares/xyz.png" -> "shares/xyz.png"
-    rel_path = os.path.relpath(local_path, start="data").replace("\\", "/")
+    rel_path = os.path.relpath(local_path, start=DATA_DIR).replace("\\", "/")
     print(f"[Supabase Sync] Uploading {local_path} to remote {rel_path}...")
     
     try:
@@ -89,7 +92,7 @@ def sync_from_cloud_on_startup():
     print("[Supabase Sync] Initializing sync from cloud...")
     
     # 1. Download database
-    db_local = os.path.join("data", "hyperlytics.db")
+    db_local = os.path.join(DATA_DIR, "hyperlytics.db")
     download_file("hyperlytics.db", db_local)
     
     # 2. List and download all files in the storage bucket
@@ -114,7 +117,7 @@ def sync_from_cloud_on_startup():
             # Check recursively if it's a folder or file.
             # Supabase returns id for files, and no id for folder placeholders.
             if file_info.get("id"):
-                local_path = os.path.join("data", name)
+                local_path = os.path.join(DATA_DIR, name)
                 if not os.path.exists(local_path):
                     download_file(name, local_path)
                     
@@ -128,7 +131,7 @@ def sync_from_cloud_on_startup():
             if not name:
                 continue
             if file_info.get("id"):
-                local_path = os.path.join("data", "shares", name)
+                local_path = os.path.join(DATA_DIR, "shares", name)
                 if not os.path.exists(local_path):
                     download_file(f"shares/{name}", local_path)
                     
