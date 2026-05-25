@@ -4,9 +4,13 @@ import urllib.parse
 import json
 import threading
 
-SUPABASE_URL = os.getenv("SUPABASE_URL", "")
+SUPABASE_URL = os.getenv("SUPABASE_URL", "").rstrip("/")
+if SUPABASE_URL.endswith("/rest/v1"):
+    SUPABASE_URL = SUPABASE_URL[:-8].rstrip("/")
+
 SUPABASE_KEY = os.getenv("SUPABASE_KEY", "")
 BUCKET_NAME = os.getenv("SUPABASE_BUCKET", "hyperlytics")
+
 
 BACKEND_DIR = os.path.abspath(os.path.dirname(__file__))
 DATA_DIR = os.path.join(BACKEND_DIR, "data")
