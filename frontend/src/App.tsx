@@ -48,7 +48,7 @@ import {
   Cell
 } from "recharts";
 
-const API_URL = "http://localhost:8000";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 interface Dataset {
   name: string;
@@ -921,7 +921,8 @@ export default function App() {
     // WebSocket live session connection for collaboration
     useEffect(() => {
       if (user && currentView === "dashboard") {
-        const ws = new WebSocket(`ws://localhost:8000/ws/collaborate/session_hyperlytics`);
+        const wsUrl = API_URL.replace(/^http/, "ws") + "/ws/collaborate/session_hyperlytics";
+        const ws = new WebSocket(wsUrl);
         ws.onopen = () => {
           console.log("Collaborative WS open");
           ws.send(JSON.stringify({ type: "join", user: user.name }));
