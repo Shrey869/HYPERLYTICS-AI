@@ -1,0 +1,41 @@
+# Node dependencies
+node_modules/
+dist/
+dist-ssr/
+*.local
+.env
+.env.*
+*.env
+
+# Python environment
+.venv/
+venv/
+ENV/
+env/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Databases and user uploaded files
+backend/data/hyperlytics.db
+backend/data/*.csv
+backend/data/*.xlsx
+backend/data/*.parquet
+backend/data/*.json
+# Keep the directory structure if needed, but ignore actual database/uploads
+*.db
+*.log
+
+# IDE files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS files
+.DS_Store
+Thumbs.db
